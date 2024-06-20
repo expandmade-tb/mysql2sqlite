@@ -22,8 +22,31 @@ class Transporter {
 
     function __construct(string $db_host, string $db_name, string $db_user, string $db_password) {  
         $this->db_name = $db_name;  
-        DbMSQ::instance($db_host, $db_name, $db_user, $db_password);
-        DbSQ3::instance(BASEPATH.'/'.Helper::env('sqlite_db', 'sqlite.db'));
+
+        try {
+            $fullpath = BASEPATH.Helper::env('sqlite_db', 'sqlite.db');
+            $path = pathinfo($fullpath);
+
+            if ( ! is_dir($path['dirname']) )
+                if ( file_exists($path['dirname']) ) {
+                    Helper::writeln("cannot create directory {$path['dirname']} (please check your settings)");
+                    exit;
+                }
+                else
+                    mkdir($path['dirname']);
+
+            DbSQ3::instance($fullpath);
+        } catch (\Throwable $th) {
+            Helper::writeln('cannot connect to sqlite database (please check your settings)');
+            exit;
+        }
+
+        try {
+            DbMSQ::instance($db_host, $db_name, $db_user, $db_password);
+        } catch (\Throwable $th) {
+            Helper::writeln('cannot connect to mysql database (please check your settings)');
+            exit;
+        }
     }
 
     public function get_Tables() : array {

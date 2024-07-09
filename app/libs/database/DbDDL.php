@@ -4,7 +4,7 @@ namespace database;
 
 /**
  * DDL creator class
- * Version 1.2.0
+ * Version 1.2.1
  * Author: expandmade / TB
  * Author URI: https://expandmade.com
  */
@@ -197,16 +197,14 @@ class DbDDL {
             $unique = $values['unique'] === true && empty($auto_increment) ? ' UNIQUE' : '';
             $default = is_null($values['default'])  ? '' : " DEFAULT {$values['default']}";
 
-
             if ( $values['auto_increment'] === true ) {
-                $auto_increment = ' AUTO_INCREMENT';
-                $this->primary_key($field);
+                $this->primary_key("$field AUTOINCREMENT");
                 $not_null = '';
             }
              else
                 $auto_increment = '';
 
-            $sql .= "{$field} {$type}{$not_null}{$default}{$auto_increment}{$unique}, ";
+            $sql .= "{$field} {$type}{$not_null}{$default}{$unique}, ";
         }
 
         if ( !empty($this->primary_key) )

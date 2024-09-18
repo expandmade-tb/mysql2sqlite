@@ -4,7 +4,7 @@ namespace database;
 
 /**
  * DDL creator class
- * Version 1.2.1
+ * Version 1.2.2
  * Author: expandmade / TB
  * Author URI: https://expandmade.com
  */
@@ -52,9 +52,6 @@ class DbDDL {
     }
 
     public function datetime(string $name, bool $not_null=false, bool $unique=false, ?string $default=null) : DbDDL {
-        if (!is_null($default))
-            $default = '"'.$default.'"';
-        
         $this->fields[$name] = ['type'=>'datetime', 'not_null'=>$not_null, 'auto_increment'=>false, 'unique'=>$unique, 'default'=>$default];
         return $this;
     }
@@ -131,6 +128,9 @@ class DbDDL {
                 case 'blob':
                     $type='BLOB';
                     break;
+                case 'datetime':
+                    $type='DATETIME';
+                    break;
                 default:
                     $type='INT';
                     break;
@@ -194,16 +194,14 @@ class DbDDL {
         foreach ($this->fields as $field => $values) {
             $type = strtoupper($values['type']);
             $not_null = $values['not_null'] === true ? ' NOT NULL' : '';
-            $unique = $values['unique'] === true && empty($auto_increment) ? ' UNIQUE' : '';
             $default = is_null($values['default'])  ? '' : " DEFAULT {$values['default']}";
 
             if ( $values['auto_increment'] === true ) {
                 $this->primary_key("$field AUTOINCREMENT");
                 $not_null = '';
             }
-             else
-                $auto_increment = '';
 
+            $unique = $values['unique'] === true && $values['auto_increment'] !== true ? ' UNIQUE' : '';
             $sql .= "{$field} {$type}{$not_null}{$default}{$unique}, ";
         }
 

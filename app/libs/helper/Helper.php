@@ -5,7 +5,8 @@ namespace helper;
 use Exception;
 
 class Helper {
-    public static function setup() {
+    public static function setup(array $options=[]) {
+        // get configuration from config file
         try {
             require_once APP.'/'.SCRIPT.'_config.php';
             $vars = get_defined_vars();
@@ -13,6 +14,32 @@ class Helper {
         } catch (\Throwable $th) {
             self::writeln('config file missing');
             exit;
+        }
+
+        // overwrite configuration with command line params
+        if ( !empty($options) ) {
+            switch (true) {
+                case $options['h']??false !== false:
+                    $_ENV['db_host']=$options['h'];
+                    break;
+                case $options['d']??false !== false:
+                    $_ENV['db_name']=$options['d'];
+                    break;
+                case $options['u']??false !== false:
+                    $_ENV['db_user']=$options['u'];
+                    break;
+                case $options['p']??false !== false:
+                    $_ENV['db_password']=$options['p'];
+                    break;
+                default:
+                    self::writeln('Usage:');
+                    self::writeln('   -h host');
+                    self::writeln('   -d database');
+                    self::writeln('   -u user');
+                    self::writeln('   -p password');
+                    self::writeln();
+                    exit(1);
+            }
         }
     }
 

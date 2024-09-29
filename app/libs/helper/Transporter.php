@@ -74,10 +74,15 @@ class Transporter {
             case 'mediumtext' == substr($type, 0, 10);
             case 'longtext' == substr($type, 0, 8);
             case 'text' == substr($type, 0, 4);
+            case 'char' == substr($type, 0, 4);
                 return 'text';
             case 'numeric' == substr($type, 0, 8);
                 return 'numeric';
             case 'datetime' == substr($type, 0, 8);
+                return 'datetime';
+            case 'date' == substr($type, 0, 4);
+                return 'datetime';
+            case 'decimal' == substr($type, 0, 7);
                 return 'datetime';
             default:
                 return 'not_supported';
@@ -110,10 +115,17 @@ class Transporter {
             $name = $value["Field"];
             $type = $value["Type"];
             $not_null = $value["Null"] == 'NO';
-            $default = empty($value["Default"]) == true ? null : $value["Default"]; 
             $auto_increment = $value["Extra"] == 'auto_increment' ? true : false; 
             $unique=false; // handle indexes later
             
+            if ( empty($default) == true )
+                $default = null;
+            else
+                if ( $value['Extra'] == 'DEFAULT_GENERATED' )
+                    $default = $value["Default"];
+                else
+                    $default = '"'.$value["Default"].'"';
+
             switch ($this->convert_to_sqlite_type($type)) {
                 case 'integer':
                     $ddl->integer($name, $not_null, $auto_increment, $unique, $default);
@@ -125,7 +137,7 @@ class Transporter {
                     $ddl->text($name, 0, $not_null, $unique, $default);
                     break;
                 case 'numeric':
-                    $ddl->numeric($name, $not_null, $default);
+                    $ddl->real($name, $not_null, $default);
                     break;
                 case 'datetime':
                     $ddl->datetime($name, $not_null, $unique, $default);
@@ -209,7 +221,7 @@ class Transporter {
         return $ddl->createSQ3();
     }
     
-    public function transport(string $table, array $args=[]) : int {
+    public function transport(string $table, array $args=[]) : string | int {
         // get optional arguments and set their defaults
         $use_transactions=true;
         $row_chunks=100;
@@ -227,10 +239,12 @@ class Transporter {
             Helper::writeln($msg);
             Helper::writeln($result);
 
-            if ($on_exception_stop)
+            if ($on_exception_stop) {
+                return $th->getMessage();
                 exit;
+            }
             else
-                return 0;
+                return $th->getMessage();
         }
 
         $rowcount = $source->count();
@@ -260,6 +274,8 @@ class Transporter {
 
                     if ($on_exception_stop)
                         exit;
+                    else
+                        return $th->getMessage();
                 }
                 
                 $lines++;

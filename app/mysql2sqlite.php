@@ -9,7 +9,7 @@ use helper\Helper;
 use helper\Transporter;
 
 define('SCRIPT',basename(__FILE__, '.php'));
-define('VERSION','1.1.0'); // version of this app
+define('VERSION','1.2.0'); // version of this app
 define('BASEPATH', realpath(__DIR__.'/../'));
 define('APP', BASEPATH.'/app');
 define('IS_CLI_SRV', php_sapi_name() === 'cli');
@@ -17,6 +17,17 @@ define('IS_CLI_SRV', php_sapi_name() === 'cli');
 require_once APP.'/libs/helper/Autoloader.php';
 Autoloader::instance();
 Helper::writeln(SCRIPT.' '.VERSION.' (transfer a mysql database to sqlite3)');
+$usage = $argv[1]??'';
+
+if ( $usage === '?' ) {
+    Helper::writeln('usage:');
+    Helper::writeln('   -h host');
+    Helper::writeln('   -d database');
+    Helper::writeln('   -u user');
+    Helper::writeln('   -p password');
+    exit;
+}
+
 $options = getopt('h::d::u::p::',['host','database','user','password']);
 
 if ($options === false)
@@ -25,7 +36,6 @@ else
     Helper::setup($options);
 
 Helper::writeln();
-Helper::writeln("...DATABASE: " .Helper::env('db_name'). " -> SQlite DB: ").Helper::env('sqlite_db');
 $transporter = new Transporter(Helper::env('db_host'), Helper::env('db_name'), Helper::env('db_user'), Helper::env('db_password'));
 
 $timeStart = microtime(true);

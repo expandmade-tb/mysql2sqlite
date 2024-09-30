@@ -20,27 +20,26 @@ class Helper {
         if ( !empty($options) ) {
             switch (true) {
                 case $options['h']??false !== false:
-                    $_ENV['db_host']=$options['h'];
-                    break;
+                    $_ENV['db_host'] = $options['h'];
                 case $options['d']??false !== false:
-                    $_ENV['db_name']=$options['d'];
-                    break;
+                    $dbname = $options['d'];
+                    $_ENV['db_name'] = $dbname;
+                    $_ENV['sqlite_db'] = "/storage/$dbname.sqlite"; 
                 case $options['u']??false !== false:
-                    $_ENV['db_user']=$options['u'];
-                    break;
+                    $_ENV['db_user'] = $options['u'];
                 case $options['p']??false !== false:
-                    $_ENV['db_password']=$options['p'];
-                    break;
-                default:
-                    self::writeln('Usage:');
-                    self::writeln('   -h host');
-                    self::writeln('   -d database');
-                    self::writeln('   -u user');
-                    self::writeln('   -p password');
-                    self::writeln();
-                    exit(1);
+                    $_ENV['db_password'] = $options['p'];
+                case $options['s']??false !== false:
+                    $_ENV['db_password'] = $options['p'];
             }
         }
+
+        self::writeln();
+        self::writeln("HOST -> ".self::env('db_host'));
+        self::writeln("DATABASE -> ".self::env('db_name'));
+        self::writeln("USER -> ".self::env('db_user'));
+        self::writeln("PASS -> " .self::env('db_password'));
+        self::writeln("SQLite -> ".self::env('sqlite_db'));
     }
 
     public static function writeln (string $text='', string $new_line=PHP_EOL) {
